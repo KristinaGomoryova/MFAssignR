@@ -111,8 +111,7 @@ MFAssignCHO <- function(peaks, isopeaks = "none", ionMode, lowMW = 100, highMW =
   if (ionMode != "pos" & ionMode != "neg") print("WARNING: ionMode should be 'pos' or 'neg' ")
 
 
-  if (Ox != 30) print("WARNING: Ox is not at its default value, this will cause the core formula algorithm to perform additional
-                    or fewer loops, are you sure you want it changed?")
+  if (Ox != 30) print("WARNING: Ox is not at its default value, this will cause the core formula algorithm to perform additional or fewer loops, are you sure you want it changed?")
 
   if (ppm_err > 3) print("WARNING: The maximum allowed error (ppm_err) is greater than 3, is this what you want?")
 
@@ -133,6 +132,8 @@ MFAssignCHO <- function(peaks, isopeaks = "none", ionMode, lowMW = 100, highMW =
   fitMode <- "ppm"
   maxErr <- ppm_err
   numDigits <- 6
+  CH2_mass_KM <- 14
+  CH2_mass_IUPAC <- 14.01565
 
   # Initialize data for analysis
   totFormulae <- 0
@@ -196,20 +197,20 @@ MFAssignCHO <- function(peaks, isopeaks = "none", ionMode, lowMW = 100, highMW =
   Ambigcheck <- Ambig # Renames the input term so it doesn't interfere with other things
   ################################# Inital Kendrick Series implementation
   if (MSMS == "off") {
-    peaks$KM <- peaks$mass * (14 / 14.01565)
+    peaks$KM <- peaks$mass * (CH2_mass_KM / CH2_mass_IUPAC)
 
     peaks$KMD <- ifelse(abs(floor(peaks$mass) - peaks$mass) >= min_def & abs(floor(peaks$mass) - peaks$mass) <= max_def,
       peaks$KMD <- floor(peaks$mass) - peaks$KM, peaks$KMD <- round(peaks$mass) - peaks$KM
     ) # New 1/6/20
 
     peaks$zstar <- ifelse(abs(floor(peaks$mass) - peaks$mass) >= min_def & abs(floor(peaks$mass) - peaks$mass) <= max_def,
-      peaks$zstar <- floor(peaks$mass) %% 14 - 14, peaks$zstar <- round(peaks$mass) %% 14 - 14
+      peaks$zstar <- floor(peaks$mass) %% CH2_mass_KM - CH2_mass_KM, peaks$zstar <- round(peaks$mass) %% CH2_mass_KM - CH2_mass_KM
     ) # New 1/6/20
 
     peaks$KMDTest <- round(peaks$KMD, 3)
 
     Test <- dplyr::group_by(peaks, KMDTest, zstar)
-    Test <- dplyr::mutate(Test, CH2_num = round(mass - min(mass)) / 14)
+    Test <- dplyr::mutate(Test, CH2_num = round(mass - min(mass)) / CH2_mass_KM)
     peaksend <- dplyr::filter(Test, CH2_num != 0 & CH2_num != (min(CH2_num[CH2_num != min(CH2_num)]) + 1) &
       CH2_num != (min(CH2_num[CH2_num != min(CH2_num)]) + 3))
 
@@ -222,18 +223,18 @@ MFAssignCHO <- function(peaks, isopeaks = "none", ionMode, lowMW = 100, highMW =
 
     peaks <- data.frame(RA = peaks[1], mass = peaks[2])
   } else {
-    peaks$KM <- peaks$mass * (14 / 14.01565)
+    peaks$KM <- peaks$mass * (CH2_mass_KM / CH2_mass_IUPAC)
     peaks$KMD <- ifelse(abs(floor(peaks$mass) - peaks$mass) >= min_def & abs(floor(peaks$mass) - peaks$mass) <= max_def,
       peaks$KMD <- floor(peaks$mass) - peaks$KM, peaks$KMD <- round(peaks$mass) - peaks$KM
     ) # New 1/6/20
 
     peaks$zstar <- ifelse(abs(floor(peaks$mass) - peaks$mass) >= min_def & abs(floor(peaks$mass) - peaks$mass) <= max_def,
-      peaks$zstar <- floor(peaks$mass) %% 14 - 14, peaks$zstar <- round(peaks$mass) %% 14 - 14
+      peaks$zstar <- floor(peaks$mass) %% CH2_mass_KM - CH2_mass_KM, peaks$zstar <- round(peaks$mass) %% CH2_mass_KM - CH2_mass_KM
     ) # New 1/6/20
     peaks$KMDTest <- round(peaks$KMD, 3)
 
     Test <- dplyr::group_by(peaks, KMDTest, zstar)
-    Test <- dplyr::mutate(Test, CH2_num = round(mass - min(mass)) / 14)
+    Test <- dplyr::mutate(Test, CH2_num = round(mass - min(mass)) / CH2_mass_KM)
     peaksend <- dplyr::filter(Test, CH2_num != 0 & CH2_num != (min(CH2_num[CH2_num != min(CH2_num)]) + 1) &
       CH2_num != (min(CH2_num[CH2_num != min(CH2_num)]) + 3))
 
@@ -438,7 +439,7 @@ MFAssignCHO <- function(peaks, isopeaks = "none", ionMode, lowMW = 100, highMW =
 
     # NM = floor(Exp_mass),
 
-    KM = Exp_mass * (14 / 14.01565), # KMD = NM - KM,
+    KM = Exp_mass * (CH2_mass_KM / CH2_mass_IUPAC), # KMD = NM - KM,
 
     max_LA = theor_mass1 / 13, actual_LA = ((C - E) + N + S + O + E + S34 + P + Cl + Cl37 + N15),
     rule_13 = round(actual_LA / max_LA, 1),
@@ -516,17 +517,17 @@ MFAssignCHO <- function(peaks, isopeaks = "none", ionMode, lowMW = 100, highMW =
   ####
 
   peaks$zstar <- ifelse(abs(floor(peaks$mass) - peaks$mass) >= min_def & abs(floor(peaks$mass) - peaks$mass) <= max_def,
-    peaks$zstar <- floor(peaks$mass) %% 14 - 14, peaks$zstar <- round(peaks$mass) %% 14 - 14
+    peaks$zstar <- floor(peaks$mass) %% CH2_mass_KM - CH2_mass_KM, peaks$zstar <- round(peaks$mass) %% CH2_mass_KM - CH2_mass_KM
   ) # New 1/6/20
 
 
   Unambig$NM <- floor(Unambig$Exp_mass)
 
-  Unambig$KM_CH2 <- Unambig$Exp_mass * (14 / 14.01565)
+  Unambig$KM_CH2 <- Unambig$Exp_mass * (CH2_mass_KM / CH2_mass_IUPAC)
   Unambig$KMD_CH2 <- round(Unambig$NM - Unambig$KM_CH2, 3)
   ###
   Unambig$z_CH2 <- ifelse(abs(floor(Unambig$Exp_mass) - Unambig$Exp_mass) >= min_def & abs(floor(Unambig$Exp_mass) - Unambig$Exp_mass) <= max_def,
-    Unambig$z_CH2 <- floor(Unambig$Exp_mass) %% 14 - 14, Unambig$z_CH2 <- round(Unambig$Exp_mass) %% 14 - 14
+    Unambig$z_CH2 <- floor(Unambig$Exp_mass) %% CH2_mass_KM - CH2_mass_KM, Unambig$z_CH2 <- round(Unambig$Exp_mass) %% CH2_mass_KM - CH2_mass_KM
   ) # New 1/6/20
   ###
   Unambig$KM_O <- Unambig$Exp_mass * (16 / 15.9949146223)
@@ -570,11 +571,11 @@ MFAssignCHO <- function(peaks, isopeaks = "none", ionMode, lowMW = 100, highMW =
   ) # New 1/6/20
   ####
 
-  Ambig$KM_CH2 <- Ambig$Exp_mass * (14 / 14.01565)
+  Ambig$KM_CH2 <- Ambig$Exp_mass * (CH2_mass_KM / CH2_mass_IUPAC)
   Ambig$KMD_CH2 <- round(Ambig$NM - Ambig$KM_CH2, 3)
   ###
   Ambig$z_CH2 <- ifelse(abs(floor(Ambig$Exp_mass) - Ambig$Exp_mass) >= min_def & abs(floor(Ambig$Exp_mass) - Ambig$Exp_mass) <= max_def,
-    Ambig$z_CH2 <- floor(Ambig$Exp_mass) %% 14 - 14, Ambig$z_CH2 <- round(Ambig$Exp_mass) %% 14 - 14
+    Ambig$z_CH2 <- floor(Ambig$Exp_mass) %% CH2_mass_KM - CH2_mass_KM, Ambig$z_CH2 <- round(Ambig$Exp_mass) %% CH2_mass_KM - CH2_mass_KM
   ) # New 1/6/20
   ###
 
@@ -692,7 +693,7 @@ MFAssignCHO <- function(peaks, isopeaks = "none", ionMode, lowMW = 100, highMW =
         )]
         names(knownCH2)[2] <- "base_mass"
         Step1 <- merge(unknown, knownCH2, by.x = c("KMD_CH2", "z_CH2"), by.y = c("KMD_CH2", "z_CH2"))
-        Step1$CH2_num <- round(((Step1$Exp_mass - Step1$base_mass)) / 14.01565)
+        Step1$CH2_num <- round(((Step1$Exp_mass - Step1$base_mass)) / CH2_mass_IUPAC)
         Step1$C <- Step1$C + Step1$CH2_num
         Step1$H <- Step1$H + 2 * Step1$CH2_num
         Step1$Type <- "CH2"
@@ -868,7 +869,7 @@ MFAssignCHO <- function(peaks, isopeaks = "none", ionMode, lowMW = 100, highMW =
 
     # NM = floor(Exp_mass),
 
-    KM = Exp_mass * (14 / 14.01565), # KMD = NM - KM,
+    KM = Exp_mass * (CH2_mass_KM / CH2_mass_IUPAC), # KMD = NM - KM,
 
     max_LA = theor_mass1 / 13, actual_LA = ((C - E) + N + S + O + E + S34 + P + Cl + Cl37 + N15),
     rule_13 = round(actual_LA / max_LA, 1),
@@ -1117,11 +1118,11 @@ MFAssignCHO <- function(peaks, isopeaks = "none", ionMode, lowMW = 100, highMW =
   ) # New 1/6/20
   ####
 
-  Iso_nomatch$KM_CH2 <- Iso_nomatch$Exp_mass * (14 / 14.01565)
+  Iso_nomatch$KM_CH2 <- Iso_nomatch$Exp_mass * (CH2_mass_KM / CH2_mass_IUPAC)
   Iso_nomatch$KMD_CH2 <- round(Iso_nomatch$NM - Iso_nomatch$KM_CH2, 3)
   ###
   Iso_nomatch$z_CH2 <- ifelse(abs(floor(Iso_nomatch$Exp_mass) - Iso_nomatch$Exp_mass) >= min_def & abs(floor(Iso_nomatch$Exp_mass) - Iso_nomatch$Exp_mass) <= max_def,
-    Iso_nomatch$z_CH2 <- floor(Iso_nomatch$Exp_mass) %% 14 - 14, Iso_nomatch$z_CH2 <- round(Iso_nomatch$Exp_mass) %% 14 - 14
+    Iso_nomatch$z_CH2 <- floor(Iso_nomatch$Exp_mass) %% CH2_mass_KM - CH2_mass_KM, Iso_nomatch$z_CH2 <- round(Iso_nomatch$Exp_mass) %% CH2_mass_KM - CH2_mass_KM
   ) # New 1/6/20
   ###
 
@@ -1168,11 +1169,11 @@ MFAssignCHO <- function(peaks, isopeaks = "none", ionMode, lowMW = 100, highMW =
   ) # New 1/6/20
   ####
 
-  recordsx$KM_CH2 <- recordsx$Exp_mass * (14 / 14.01565)
+  recordsx$KM_CH2 <- recordsx$Exp_mass * (CH2_mass_KM / CH2_mass_IUPAC)
   recordsx$KMD_CH2 <- round(recordsx$NM - recordsx$KM_CH2, 3)
   ###
   recordsx$z_CH2 <- ifelse(abs(floor(recordsx$Exp_mass) - recordsx$Exp_mass) >= min_def & abs(floor(recordsx$Exp_mass) - recordsx$Exp_mass) <= max_def,
-    recordsx$z_CH2 <- floor(recordsx$Exp_mass) %% 14 - 14, recordsx$z_CH2 <- round(recordsx$Exp_mass) %% 14 - 14
+    recordsx$z_CH2 <- floor(recordsx$Exp_mass) %% CH2_mass_KM - CH2_mass_KM, recordsx$z_CH2 <- round(recordsx$Exp_mass) %% CH2_mass_KM - CH2_mass_KM
   ) # New 1/6/20
   ###
 
@@ -1259,7 +1260,7 @@ MFAssignCHO <- function(peaks, isopeaks = "none", ionMode, lowMW = 100, highMW =
         )]
         names(knownCH2)[2] <- "base_mass"
         Step1 <- merge(unknown, knownCH2, by.x = c("KMD_CH2", "z_CH2"), by.y = c("KMD_CH2", "z_CH2"))
-        Step1$CH2_num <- round(((Step1$Exp_mass - Step1$base_mass)) / 14.01565)
+        Step1$CH2_num <- round(((Step1$Exp_mass - Step1$base_mass)) / CH2_mass_IUPAC)
         Step1$C <- Step1$C + Step1$CH2_num
         Step1$H <- Step1$H + 2 * Step1$CH2_num
         Step1$Type <- "CH2"
@@ -1445,7 +1446,7 @@ MFAssignCHO <- function(peaks, isopeaks = "none", ionMode, lowMW = 100, highMW =
     records1X$NM <- floor(records1X$Exp_mass), records1X$NM <- round(records1X$Exp_mass)
   ) # New 1/6/20
 
-  records1X$KM <- records1X$Exp_mass * (14 / 14.01565)
+  records1X$KM <- records1X$Exp_mass * (CH2_mass_KM / CH2_mass_IUPAC)
 
   records1X$KMD <- ifelse(abs(floor(records1X$Exp_mass) - records1X$Exp_mass) >= min_def & abs(floor(records1X$Exp_mass) - records1X$Exp_mass) <= max_def,
     records1X$KMD <- floor(records1X$Exp_mass) - records1X$KM, records1X$KMD <- round(records1X$Exp_mass) - records1X$KM
