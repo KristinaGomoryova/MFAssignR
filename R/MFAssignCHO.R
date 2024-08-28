@@ -139,6 +139,10 @@ MFAssignCHO <- function(peaks, isopeaks = "none", ionMode, lowMW = 100, highMW =
   O16_mass_KM <- 16
   O16_mass_IUPAC <- 15.9949146223
   NH4_mass <- 18.033823 # M + NH4
+  H_mass_KM <- 2
+  H_mass_IUPAC <- 2.01565
+  H2O_mass_KM <- 18
+  H2O_mass_IUPAC <- 18.01056468
 
   # Initialize data for analysis
   totFormulae <- 0
@@ -150,28 +154,22 @@ MFAssignCHO <- function(peaks, isopeaks = "none", ionMode, lowMW = 100, highMW =
   ifelse(isopeaks != "none", cols2 <- ncol(isopeaks), cols2 <- 0)
   # if(isopeaks != "none") {cols2 <- ncol(isopeaks)} else{cols2 <- 0}
   if (cols == 3) {
-    if (cols == 3) {
       monoSave <- peaks[c(1, 2, 3)]
-    }
     # if(cols2 == 4 & isopeaks != "none") {isoSave <- isopeaks[c(1,2,3)]}
     ifelse(cols2 == 4 & isopeaks != "none", isoSave <- isopeaks[c(1, 2, 3)], print("No Iso List Included"))
     ifelse(cols2 == 0 & isopeaks == "none", isoSave <- data.frame(mass = -42, abund = -42, RT = -42), isoSave <- isoSave)
     # if(cols2 == 0 & isopeaks == "none") {isoSave <- data.frame(mass = -42, abund = -42, RT = -42)}
-    names(isoSave)[1] <- "exp_mass"
-    names(isoSave)[2] <- "abundance"
-    names(isoSave)[3] <- "RT"
-    names(monoSave)[1] <- "exp_mass"
-    names(monoSave)[2] <- "abundance"
-    names(monoSave)[3] <- "RT"
+    isoSave <- setNames(isoSave, c("exp_mass", "abundance", "RT"))
+    monoSave <- setNames(monoSave, c("exp_mass", "abundance", "RT"))
   }
   #############
   peaks <- peaks[c(2, 1)]
+  peaks <- setNames(peaks[c(2,1)], c("mass", "RA"))
 
-  names(peaks)[2] <- "mass"
-  names(peaks)[1] <- "RA"
   rawpeaks <- peaks
-  peaks <- peaks[peaks$mass >= lowMW, ]
-  peaks <- peaks[peaks$mass <= highMW, ]
+
+  peaks <- peaks %>%
+    filter(mass >= lowMW & mass <= highMW)
 
   # isopeaks2 <- if(isopeaks != "none") isopeaks else data.frame(x=0,y=0,Tag = 0)
   ifelse(isopeaks != "none", isopeaks2 <- isopeaks, isopeaks2 <- data.frame(x = 0, y = 0, Tag = 0))
@@ -184,9 +182,8 @@ MFAssignCHO <- function(peaks, isopeaks = "none", ionMode, lowMW = 100, highMW =
     isopeaks2 <- isopeaks2[c(2, 1, 3)]
   } # LC Change
 
-  names(isopeaks2)[2] <- "Iso_mass"
-  names(isopeaks2)[1] <- "Iso_RA"
-  names(isopeaks2)[3] <- "Tag"
+  isopeaks2 <- setNames(isopeaks2[c(2, 1, 3)], c("Iso_mass", "Iso_RA", "Tag"))
+
   isopeaks2 <- isopeaks2[isopeaks2$Iso_RA > SN, ]
 
   peaksAll <- peaks
@@ -280,8 +277,6 @@ MFAssignCHO <- function(peaks, isopeaks = "none", ionMode, lowMW = 100, highMW =
     } else {
       exactEM <- ionEM - proton
     }
-
-
 
     # Check that exactEM is within bounds of LowMW and HighMW bounds
     if ((round(exactEM) >= lowMW) & (round(exactEM) <= highMW + 1)) {
@@ -543,19 +538,19 @@ MFAssignCHO <- function(peaks, isopeaks = "none", ionMode, lowMW = 100, highMW =
   ) # New 1/6/20
   ###
 
-  Unambig$KM_H2 <- Unambig$Exp_mass * (2 / 2.01565)
+  Unambig$KM_H2 <- Unambig$Exp_mass * (H_mass_KM / H_mass_IUPAC)
   Unambig$KMD_H2 <- round(Unambig$NM - Unambig$KM_H2, 3)
   ###
   Unambig$z_H2 <- ifelse(abs(floor(Unambig$Exp_mass) - Unambig$Exp_mass) >= min_def & abs(floor(Unambig$Exp_mass) - Unambig$Exp_mass) <= max_def,
-    Unambig$z_H2 <- floor(Unambig$Exp_mass) %% 2 - 2, Unambig$z_H2 <- round(Unambig$Exp_mass) %% 2 - 2
+    Unambig$z_H2 <- floor(Unambig$Exp_mass) %% H_mass_KM - H_mass_KM, Unambig$z_H2 <- round(Unambig$Exp_mass) %% H_mass_KM - H_mass_KM
   ) # New 1/6/20
   ###
 
-  Unambig$KM_H2O <- Unambig$Exp_mass * (18 / 18.01056468)
+  Unambig$KM_H2O <- Unambig$Exp_mass * (H2O_mass_KM / H2O_mass_IUPAC)
   Unambig$KMD_H2O <- round(Unambig$NM - Unambig$KM_H2O, 3)
   ###
   Unambig$z_H2O <- ifelse(abs(floor(Unambig$Exp_mass) - Unambig$Exp_mass) >= min_def & abs(floor(Unambig$Exp_mass) - Unambig$Exp_mass) <= max_def,
-    Unambig$z_H2O <- floor(Unambig$Exp_mass) %% 18 - 18, Unambig$z_H2O <- round(Unambig$Exp_mass) %% 18 - 18
+    Unambig$z_H2O <- floor(Unambig$Exp_mass) %% H2O_mass_KM - H2O_mass_KM, Unambig$z_H2O <- round(Unambig$Exp_mass) %% H2O_mass_KM - H2O_mass_KM
   ) # New 1/6/20
   ###
 
@@ -592,19 +587,19 @@ MFAssignCHO <- function(peaks, isopeaks = "none", ionMode, lowMW = 100, highMW =
   ) # New 1/6/20
   ###
 
-  Ambig$KM_H2 <- Ambig$Exp_mass * (2 / 2.01565)
+  Ambig$KM_H2 <- Ambig$Exp_mass * (H_mass_KM / H_mass_IUPAC)
   Ambig$KMD_H2 <- round(Ambig$NM - Ambig$KM_H2, 3)
   ###
   Ambig$z_H2 <- ifelse(abs(floor(Ambig$Exp_mass) - Ambig$Exp_mass) >= min_def & abs(floor(Ambig$Exp_mass) - Ambig$Exp_mass) <= max_def,
-    Ambig$z_H2 <- floor(Ambig$Exp_mass) %% 2 - 2, Ambig$z_H2 <- round(Ambig$Exp_mass) %% 2 - 2
+    Ambig$z_H2 <- floor(Ambig$Exp_mass) %% H_mass_KM - H_mass_KM, Ambig$z_H2 <- round(Ambig$Exp_mass) %% H_mass_KM - H_mass_KM
   ) # New 1/6/20
   ###
 
-  Ambig$KM_H2O <- Ambig$Exp_mass * (18 / 18.01056468)
+  Ambig$KM_H2O <- Ambig$Exp_mass * (H2O_mass_KM / H2O_mass_IUPAC)
   Ambig$KMD_H2O <- round(Ambig$NM - Ambig$KM_H2O, 3)
   ###
   Ambig$z_H2O <- ifelse(abs(floor(Ambig$Exp_mass) - Ambig$Exp_mass) >= min_def & abs(floor(Ambig$Exp_mass) - Ambig$Exp_mass) <= max_def,
-    Ambig$z_H2O <- floor(Ambig$Exp_mass) %% 18 - 18, Ambig$z_H2O <- round(Ambig$Exp_mass) %% 18 - 18
+    Ambig$z_H2O <- floor(Ambig$Exp_mass) %% H2O_mass_KM - H2O_mass_KM, Ambig$z_H2O <- round(Ambig$Exp_mass) %% H2O_mass_KM - H2O_mass_KM
   ) # New 1/6/20
   ###
 
@@ -732,7 +727,7 @@ MFAssignCHO <- function(peaks, isopeaks = "none", ionMode, lowMW = 100, highMW =
         )]
         names(knownH2)[2] <- "base_mass"
         Step3 <- merge(unknown, knownH2, by.x = c("KMD_H2", "z_H2"), by.y = c("KMD_H2", "z_H2"))
-        Step3$H2_num <- round(((Step3$Exp_mass - Step3$base_mass)) / 2.01565)
+        Step3$H2_num <- round(((Step3$Exp_mass - Step3$base_mass)) / H_mass_IUPAC)
         Step3$H <- Step3$H + 2 * Step3$H2_num
         Step3$Type <- "H2"
         Step3$form <- paste(Step3$C, Step3$H, Step3$O, Step3$N, Step3$S, Step3$P, Step3$E, Step3$S34,
@@ -748,7 +743,7 @@ MFAssignCHO <- function(peaks, isopeaks = "none", ionMode, lowMW = 100, highMW =
         )]
         names(knownH2O)[2] <- "base_mass"
         Step4 <- merge(unknown, knownH2O, by.x = c("KMD_H2O", "z_H2O"), by.y = c("KMD_H2O", "z_H2O"))
-        Step4$H2O_num <- round(((Step4$Exp_mass - Step4$base_mass)) / 18.01056468)
+        Step4$H2O_num <- round(((Step4$Exp_mass - Step4$base_mass)) / H2O_mass_IUPAC)
         Step4$H <- Step4$H + 2 * Step4$H2O_num
         Step4$O <- Step4$O + Step4$H2O_num
         Step4$Type <- "H2O"
@@ -1139,19 +1134,19 @@ MFAssignCHO <- function(peaks, isopeaks = "none", ionMode, lowMW = 100, highMW =
   ) # New 1/6/20
   ###
 
-  Iso_nomatch$KM_H2 <- Iso_nomatch$Exp_mass * (2 / 2.01565)
+  Iso_nomatch$KM_H2 <- Iso_nomatch$Exp_mass * (H_mass_KM / H_mass_IUPAC)
   Iso_nomatch$KMD_H2 <- round(Iso_nomatch$NM - Iso_nomatch$KM_H2, 3)
   ###
   Iso_nomatch$z_H2 <- ifelse(abs(floor(Iso_nomatch$Exp_mass) - Iso_nomatch$Exp_mass) >= min_def & abs(floor(Iso_nomatch$Exp_mass) - Iso_nomatch$Exp_mass) <= max_def,
-    Iso_nomatch$z_H2 <- floor(Iso_nomatch$Exp_mass) %% 2 - 2, Iso_nomatch$z_H2 <- round(Iso_nomatch$Exp_mass) %% 2 - 2
+    Iso_nomatch$z_H2 <- floor(Iso_nomatch$Exp_mass) %% H_mass_KM - H_mass_KM, Iso_nomatch$z_H2 <- round(Iso_nomatch$Exp_mass) %% H_mass_KM - H_mass_KM
   ) # New 1/6/20
   ###
 
-  Iso_nomatch$KM_H2O <- Iso_nomatch$Exp_mass * (18 / 18.01056468)
+  Iso_nomatch$KM_H2O <- Iso_nomatch$Exp_mass * (H2O_mass_KM / H2O_mass_IUPAC)
   Iso_nomatch$KMD_H2O <- round(Iso_nomatch$NM - Iso_nomatch$KM_H2O, 3)
   ###
   Iso_nomatch$z_H2O <- ifelse(abs(floor(Iso_nomatch$Exp_mass) - Iso_nomatch$Exp_mass) >= min_def & abs(floor(Iso_nomatch$Exp_mass) - Iso_nomatch$Exp_mass) <= max_def,
-    Iso_nomatch$z_H2O <- floor(Iso_nomatch$Exp_mass) %% 18 - 18, Iso_nomatch$z_H2O <- round(Iso_nomatch$Exp_mass) %% 18 - 18
+    Iso_nomatch$z_H2O <- floor(Iso_nomatch$Exp_mass) %% H2O_mass_KM - H2O_mass_KM, Iso_nomatch$z_H2O <- round(Iso_nomatch$Exp_mass) %% H2O_mass_KM - H2O_mass_KM
   ) # New 1/6/20
   ###
 
@@ -1190,19 +1185,19 @@ MFAssignCHO <- function(peaks, isopeaks = "none", ionMode, lowMW = 100, highMW =
   ) # New 1/6/20
   ###
 
-  recordsx$KM_H2 <- recordsx$Exp_mass * (2 / 2.01565)
+  recordsx$KM_H2 <- recordsx$Exp_mass * (H_mass_KM / H_mass_IUPAC)
   recordsx$KMD_H2 <- round(recordsx$NM - recordsx$KM_H2, 3)
   ###
   recordsx$z_H2 <- ifelse(abs(floor(recordsx$Exp_mass) - recordsx$Exp_mass) >= min_def & abs(floor(recordsx$Exp_mass) - recordsx$Exp_mass) <= max_def,
-    recordsx$z_H2 <- floor(recordsx$Exp_mass) %% 2 - 2, recordsx$z_H2 <- round(recordsx$Exp_mass) %% 2 - 2
+    recordsx$z_H2 <- floor(recordsx$Exp_mass) %% H_mass_KM - H_mass_KM, recordsx$z_H2 <- round(recordsx$Exp_mass) %% H_mass_KM - H_mass_KM
   ) # New 1/6/20
   ###
 
-  recordsx$KM_H2O <- recordsx$Exp_mass * (18 / 18.01056468)
+  recordsx$KM_H2O <- recordsx$Exp_mass * (H2O_mass_KM / H2O_mass_IUPAC)
   recordsx$KMD_H2O <- round(recordsx$NM - recordsx$KM_H2O, 3)
   ###
   recordsx$z_H2O <- ifelse(abs(floor(recordsx$Exp_mass) - recordsx$Exp_mass) >= min_def & abs(floor(recordsx$Exp_mass) - recordsx$Exp_mass) <= max_def,
-    recordsx$z_H2O <- floor(recordsx$Exp_mass) %% 18 - 18, recordsx$z_H2O <- round(recordsx$Exp_mass) %% 18 - 18
+    recordsx$z_H2O <- floor(recordsx$Exp_mass) %% H2O_mass_KM - H2O_mass_KM, recordsx$z_H2O <- round(recordsx$Exp_mass) %% H2O_mass_KM - H2O_mass_KM
   ) # New 1/6/20
   ###
 
@@ -1299,7 +1294,7 @@ MFAssignCHO <- function(peaks, isopeaks = "none", ionMode, lowMW = 100, highMW =
         )]
         names(knownH2)[2] <- "base_mass"
         Step3 <- merge(unknown, knownH2, by.x = c("KMD_H2", "z_H2"), by.y = c("KMD_H2", "z_H2"))
-        Step3$H2_num <- round(((Step3$Exp_mass - Step3$base_mass)) / 2.01565)
+        Step3$H2_num <- round(((Step3$Exp_mass - Step3$base_mass)) / H_mass_IUPAC)
         Step3$H <- Step3$H + 2 * Step3$H2_num
         Step3$Type <- "H2"
         Step3$form <- paste(Step3$C, Step3$H, Step3$O, Step3$N, Step3$S, Step3$P, Step3$E, Step3$S34,
@@ -1315,7 +1310,7 @@ MFAssignCHO <- function(peaks, isopeaks = "none", ionMode, lowMW = 100, highMW =
         )]
         names(knownH2O)[2] <- "base_mass"
         Step4 <- merge(unknown, knownH2O, by.x = c("KMD_H2O", "z_H2O"), by.y = c("KMD_H2O", "z_H2O"))
-        Step4$H2O_num <- round(((Step4$Exp_mass - Step4$base_mass)) / 18.01056468)
+        Step4$H2O_num <- round(((Step4$Exp_mass - Step4$base_mass)) / H2O_mass_IUPAC)
         Step4$H <- Step4$H + 2 * Step4$H2O_num
         Step4$O <- Step4$O + Step4$H2O_num
         Step4$Type <- "H2O"
