@@ -132,8 +132,13 @@ MFAssignCHO <- function(peaks, isopeaks = "none", ionMode, lowMW = 100, highMW =
   fitMode <- "ppm"
   maxErr <- ppm_err
   numDigits <- 6
+ 
   CH2_mass_KM <- 14
   CH2_mass_IUPAC <- 14.01565
+  Na_mass <- 22.989221
+  O16_mass_KM <- 16
+  O16_mass_IUPAC <- 15.9949146223
+  NH4_mass <- 18.033823 # M + NH4
 
   # Initialize data for analysis
   totFormulae <- 0
@@ -402,10 +407,10 @@ MFAssignCHO <- function(peaks, isopeaks = "none", ionMode, lowMW = 100, highMW =
   records1$mode <- ionMode
 
   df1 <- records1[records1$mode == "pos" & records1$M > 0 & records1$POE == 0 & records1$NH4 == 0, ]
-  df1$Neutral_mass <- df1$Exp_mass - df1$M * 22.989221
+  df1$Neutral_mass <- df1$Exp_mass - df1$M * Na_mass
 
   df1x <- records1[records1$mode == "pos" & records1$M == 0 & records1$POE == 0 & records1$NH4 == 1, ]
-  df1x$Neutral_mass <- df1x$Exp_mass - df1x$NH4 * 18.033823
+  df1x$Neutral_mass <- df1x$Exp_mass - df1x$NH4 * NH4_mass
 
   df2 <- records1[records1$mode == "pos" & records1$M == 0 & records1$POE == 0 & records1$NH4 == 0, ]
   df2$Neutral_mass <- df2$Exp_mass - 1.00727645216
@@ -530,11 +535,11 @@ MFAssignCHO <- function(peaks, isopeaks = "none", ionMode, lowMW = 100, highMW =
     Unambig$z_CH2 <- floor(Unambig$Exp_mass) %% CH2_mass_KM - CH2_mass_KM, Unambig$z_CH2 <- round(Unambig$Exp_mass) %% CH2_mass_KM - CH2_mass_KM
   ) # New 1/6/20
   ###
-  Unambig$KM_O <- Unambig$Exp_mass * (16 / 15.9949146223)
+  Unambig$KM_O <- Unambig$Exp_mass * (O16_mass_KM / O16_mass_IUPAC)
   Unambig$KMD_O <- round(Unambig$NM - Unambig$KM_O, 3)
   ###
   Unambig$z_O <- ifelse(abs(floor(Unambig$Exp_mass) - Unambig$Exp_mass) >= min_def & abs(floor(Unambig$Exp_mass) - Unambig$Exp_mass) <= max_def,
-    Unambig$z_O <- floor(Unambig$Exp_mass) %% 16 - 16, Unambig$z_O <- round(Unambig$Exp_mass) %% 16 - 16
+    Unambig$z_O <- floor(Unambig$Exp_mass) %% O16_mass_KM - O16_mass_KM, Unambig$z_O <- round(Unambig$Exp_mass) %% O16_mass_KM - O16_mass_KM
   ) # New 1/6/20
   ###
 
@@ -579,11 +584,11 @@ MFAssignCHO <- function(peaks, isopeaks = "none", ionMode, lowMW = 100, highMW =
   ) # New 1/6/20
   ###
 
-  Ambig$KM_O <- Ambig$Exp_mass * (16 / 15.9949146223)
+  Ambig$KM_O <- Ambig$Exp_mass * (O16_mass_KM / O16_mass_IUPAC)
   Ambig$KMD_O <- round(Ambig$NM - Ambig$KM_O, 3)
   ###
   Ambig$z_O <- ifelse(abs(floor(Ambig$Exp_mass) - Ambig$Exp_mass) >= min_def & abs(floor(Ambig$Exp_mass) - Ambig$Exp_mass) <= max_def,
-    Ambig$z_O <- floor(Ambig$Exp_mass) %% 16 - 16, Ambig$z_O <- round(Ambig$Exp_mass) %% 16 - 16
+    Ambig$z_O <- floor(Ambig$Exp_mass) %% O16_mass_KM - O16_mass_KM, Ambig$z_O <- round(Ambig$Exp_mass) %% O16_mass_KM - O16_mass_KM
   ) # New 1/6/20
   ###
 
@@ -711,7 +716,7 @@ MFAssignCHO <- function(peaks, isopeaks = "none", ionMode, lowMW = 100, highMW =
         )]
         names(knownO)[2] <- "base_mass"
         Step2 <- merge(unknown, knownO, by.x = c("KMD_O", "z_O"), by.y = c("KMD_O", "z_O"))
-        Step2$O_num <- round(((Step2$Exp_mass - Step2$base_mass)) / 15.9949146223)
+        Step2$O_num <- round(((Step2$Exp_mass - Step2$base_mass)) / O16_mass_IUPAC)
         Step2$O <- Step2$O + Step2$O_num
         Step2$Type <- "O"
         Step2$form <- paste(Step2$C, Step2$H, Step2$O, Step2$N, Step2$S, Step2$P, Step2$E, Step2$S34,
@@ -828,10 +833,10 @@ MFAssignCHO <- function(peaks, isopeaks = "none", ionMode, lowMW = 100, highMW =
 
 
   df1 <- records1[records1$mode == "pos" & records1$M > 0 & records1$POE == 0 & records1$NH4 == 0, ]
-  df1$Neutral_mass <- df1$Exp_mass - df1$M * 22.989221
+  df1$Neutral_mass <- df1$Exp_mass - df1$M * Na_mass
 
   df1x <- records1[records1$mode == "pos" & records1$M == 0 & records1$POE == 0 & records1$NH4 == 1, ]
-  df1x$Neutral_mass <- df1x$Exp_mass - df1x$NH4 * 18.033823
+  df1x$Neutral_mass <- df1x$Exp_mass - df1x$NH4 * NH4_mass
 
   df2 <- records1[records1$mode == "pos" & records1$M == 0 & records1$POE == 0 & records1$NH4 == 0, ]
   df2$Neutral_mass <- df2$Exp_mass - 1.00727645216
@@ -1126,11 +1131,11 @@ MFAssignCHO <- function(peaks, isopeaks = "none", ionMode, lowMW = 100, highMW =
   ) # New 1/6/20
   ###
 
-  Iso_nomatch$KM_O <- Iso_nomatch$Exp_mass * (16 / 15.9949146223)
+  Iso_nomatch$KM_O <- Iso_nomatch$Exp_mass * (O16_mass_KM / O16_mass_IUPAC)
   Iso_nomatch$KMD_O <- round(Iso_nomatch$NM - Iso_nomatch$KM_O, 3)
   ###
   Iso_nomatch$z_O <- ifelse(abs(floor(Iso_nomatch$Exp_mass) - Iso_nomatch$Exp_mass) >= min_def & abs(floor(Iso_nomatch$Exp_mass) - Iso_nomatch$Exp_mass) <= max_def,
-    Iso_nomatch$z_O <- floor(Iso_nomatch$Exp_mass) %% 16 - 16, Iso_nomatch$z_O <- round(Iso_nomatch$Exp_mass) %% 16 - 16
+    Iso_nomatch$z_O <- floor(Iso_nomatch$Exp_mass) %% O16_mass_KM - O16_mass_KM, Iso_nomatch$z_O <- round(Iso_nomatch$Exp_mass) %% O16_mass_KM - O16_mass_KM
   ) # New 1/6/20
   ###
 
@@ -1177,11 +1182,11 @@ MFAssignCHO <- function(peaks, isopeaks = "none", ionMode, lowMW = 100, highMW =
   ) # New 1/6/20
   ###
 
-  recordsx$KM_O <- recordsx$Exp_mass * (16 / 15.9949146223)
+  recordsx$KM_O <- recordsx$Exp_mass * (O16_mass_KM / O16_mass_IUPAC)
   recordsx$KMD_O <- round(recordsx$NM - recordsx$KM_O, 3)
   ###
   recordsx$z_O <- ifelse(abs(floor(recordsx$Exp_mass) - recordsx$Exp_mass) >= min_def & abs(floor(recordsx$Exp_mass) - recordsx$Exp_mass) <= max_def,
-    recordsx$z_O <- floor(recordsx$Exp_mass) %% 16 - 16, recordsx$z_O <- round(recordsx$Exp_mass) %% 16 - 16
+    recordsx$z_O <- floor(recordsx$Exp_mass) %% O16_mass_KM - O16_mass_KM, recordsx$z_O <- round(recordsx$Exp_mass) %% O16_mass_KM - O16_mass_KM
   ) # New 1/6/20
   ###
 
@@ -1278,7 +1283,7 @@ MFAssignCHO <- function(peaks, isopeaks = "none", ionMode, lowMW = 100, highMW =
         )]
         names(knownO)[2] <- "base_mass"
         Step2 <- merge(unknown, knownO, by.x = c("KMD_O", "z_O"), by.y = c("KMD_O", "z_O"))
-        Step2$O_num <- round(((Step2$Exp_mass - Step2$base_mass)) / 15.9949146223)
+        Step2$O_num <- round(((Step2$Exp_mass - Step2$base_mass)) / O16_mass_IUPAC)
         Step2$O <- Step2$O + Step2$O_num
         Step2$Type <- "O"
         Step2$form <- paste(Step2$C, Step2$H, Step2$O, Step2$N, Step2$S, Step2$P, Step2$E, Step2$S34,
@@ -1398,10 +1403,10 @@ MFAssignCHO <- function(peaks, isopeaks = "none", ionMode, lowMW = 100, highMW =
 
 
   df1 <- records1X[records1X$mode == "pos" & records1X$M > 0 & records1X$POE == 0 & records1X$NH4 == 0, ]
-  df1$Neutral_mass <- df1$Exp_mass - df1$M * 22.989221
+  df1$Neutral_mass <- df1$Exp_mass - df1$M * Na_mass
 
   df1x <- records1X[records1X$mode == "pos" & records1X$M == 0 & records1X$POE == 0 & records1X$NH4 == 1, ]
-  df1x$Neutral_mass <- df1x$Exp_mass - df1x$NH4 * 18.033823
+  df1x$Neutral_mass <- df1x$Exp_mass - df1x$NH4 * NH4_mass
 
   df2 <- records1X[records1X$mode == "pos" & records1X$M == 0 & records1X$POE == 0 & records1X$NH4 == 0, ]
   df2$Neutral_mass <- df2$Exp_mass - 1.00727645216
