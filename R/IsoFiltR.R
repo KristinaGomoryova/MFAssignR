@@ -465,7 +465,7 @@ process_sulfur <- function(raw_data, sulferr, data_end, sulfrat) {
     normalization_factor = 12,
     multiplier = 2,
     pair_thresold = c(-1.990, -2),
-    filter_criteria = c(0.00149, -0.29051, -0.29349, 0.70949, 0.7075)
+    filter_criteria = c(0.00249, -0.29051, -0.29349, 0.70949, 0.7075)
   )
 
   data_end2 <- data_end
