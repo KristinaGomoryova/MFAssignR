@@ -204,6 +204,14 @@ IsoFiltR <- function(
   IsoOutC2_final <- unique(IsoOutC2_final)
   MonoOutC_final <- unique(MonoOutC_final)
 
+  empty_df <- data.frame(Exp_mass = -42, Abundance = -42, RT = 0)
+  IsoOutC1_final <- rbind(IsoOutC1_final, empty_df)
+  IsoOutC2_final <- rbind(IsoOutC2_final, empty_df)
+  MonoOutC_final <- rbind(MonoOutC_final, empty_df)
+  MonoOutS_final <- rbind(MonoOutS_final, empty_df)
+  IsoOutS_final <- rbind(IsoOutS_final, empty_df)
+
+
   IsoOutC1_final$Tag <- "C13"
   IsoOutC2_final$Tag <- "2C13"
   MonoOutC_final$Tag <- "C"
